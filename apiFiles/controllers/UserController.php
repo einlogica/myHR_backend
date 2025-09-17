@@ -34,18 +34,7 @@
             if (!filter_var($useremail, FILTER_VALIDATE_EMAIL)) {
                 return "Invalid MailID";
             }
-    
-            $query = "SELECT * FROM `Userinfo` Where `Mobile`='$usermobile' OR `Email`='$useremail'";
-            $stm = $this->conn->prepare($query);
-            $stm->execute();
-            $rowCount = $stm->rowCount();
-            if($rowCount!=0){
-                return "Mobile/Email already registered";
-            }
-    
-            $pin = rand(100000, 999999);
-            $hpin = password_hash($pin, PASSWORD_DEFAULT);
-    
+
             // Remove spaces (both leading, trailing, and in-between spaces)
             $trimmedString = str_replace(' ', '', $employer);
     
@@ -71,14 +60,28 @@
                 }
             }
             
-            $qry = "SELECT `TimeZone` FROM `settings` WHERE `Employer`='$employer'";
-            $stm = $this->conn->prepare($qry);
+    
+            $query = "SELECT * FROM `Userinfo` Where (`Mobile`='$usermobile' OR `Email`='$useremail') AND `Employer`='$short'";
+            $stm = $this->conn->prepare($query);
             $stm->execute();
-            $tz = $stm->fetch(PDO::FETCH_ASSOC);
-            $timezone = $tz['TimeZone'];
+            $rowCount = $stm->rowCount();
+            if($rowCount!=0){
+                return "Mobile/Email already registered";
+            }
+    
+            $pin = rand(100000, 999999);
+            $hpin = password_hash($pin, PASSWORD_DEFAULT);
+    
+            
+            // $qry = "SELECT `TimeZone` FROM `settings` WHERE `Employer`='$employer'";
+            // $stm = $this->conn->prepare($qry);
+            // $stm->execute();
+            // $tz = $stm->fetch(PDO::FETCH_ASSOC);
+            // $timezone = $tz['TimeZone'];
         
-            date_default_timezone_set($timezone);
-            // date_default_timezone_set('Asia/Kolkata');
+            // date_default_timezone_set($timezone);
+
+            date_default_timezone_set('Asia/Kolkata');
             $Time=date('H:i:s');
             $CurrDate=date('Y-m-d');
     
@@ -89,7 +92,7 @@
             $query = "INSERT INTO `EmployerInfo` (`EmpName`,`EmpShortname`,`AddressL1`,`AddressL2`) VALUES ('$employer','$short','$l1','$l2');
                         INSERT INTO `UserInfo` (`Name`,`Mobile`,`Email`,`EmployeeID`,`Employer`,`Pin`,`Permission`,`resetpassword`,`appversion`) VALUES ('$username','$usermobile','$useremail','$id','$short','$hpin','Admin','TRUE','V1');
                         INSERT INTO `EmployeeInfo` (`Name`,`Mobile`,`EmployeeID`,`Employer`,`Manager`,`ManagerID`,`Status`) VALUES ('$username','$usermobile','$id','$short','$username','$id','ACTIVE');
-                        INSERT INTO `PersonalData` (`Name`,`Mobile`,`Employer`) VALUES ('$username','$usermobile','$employer');
+                        INSERT INTO `PersonalData` (`Name`,`Mobile`,`Employer`) VALUES ('$username','$usermobile','$short');
                         INSERT INTO `settings` (`Employer`,`Users`) VALUES ('$short','10');
                         INSERT INTO `subscriptions` (`Employer`,`Amount`,`Expiry`,`EmpCount`) VALUES ('$short','0','$modifiedDate','10');
                         INSERT INTO `Accounts` (`Employer`,`Type`) VALUES ('$short','Cash'),('$short','UPI');
@@ -271,7 +274,7 @@
             $rowCount = $stm->rowCount();
     
             if($rowCount!=0){
-                $query = "SELECT `EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Mobile` ='$mobile' AND (`EmployeeInfo`.`Employer`='$emp' OR `EmployeeInfo`.`Employer`='Jilari')";
+                $query = "SELECT `EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` AND `EmployeeInfo`.`Employer`=`UserInfo`.`Employer` WHERE `EmployeeInfo`.`Mobile` ='$mobile' AND (`EmployeeInfo`.`Employer`='$emp' OR `EmployeeInfo`.`Employer`='Jilari')";
                 
                 $stm = $this->conn->prepare($query);
                 if($stm->execute()===TRUE){
@@ -436,7 +439,7 @@
             }
             
             
-            $query = "UPDATE `PersonalData` SET `Sex`='$user[Sex]',`DOB`='$user[DOB]',`AddL1`='$user[AL1]',`AddL2`='$user[AL2]',`AddL3`='$user[AL3]',`Zip`='$user[Zip]',`BloodGroup`='$user[BG]',`EmContactName`='$user[EmName]',`EmContactNum`='$user[EmNum]',`BankName`='$user[BankName]',`AccNum`='$user[AccNo]',`UAN`='$user[UAN]',`PAN`='$user[PAN]',`ESICNo`='$user[ESI]' WHERE `Mobile`='$user[Mobile]'";
+            $query = "UPDATE `PersonalData` SET `Sex`='$user[Sex]',`DOB`='$user[DOB]',`AddL1`='$user[AL1]',`AddL2`='$user[AL2]',`AddL3`='$user[AL3]',`Zip`='$user[Zip]',`BloodGroup`='$user[BG]',`EmContactName`='$user[EmName]',`EmContactNum`='$user[EmNum]',`BankName`='$user[BankName]',`AccNum`='$user[AccNo]',`UAN`='$user[UAN]',`PAN`='$user[PAN]',`ESICNo`='$user[ESI]' WHERE `Mobile`='$user[Mobile]' AND `Employer`='$data[emp]'";
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
                 return "Details updated successfully";
@@ -483,7 +486,7 @@
        
     
                 
-                $qry = "UPDATE `UserInfo` SET `Pin`='$hpin',`resetpassword`='TRUE' WHERE `Mobile`='$usermobile'";
+                $qry = "UPDATE `UserInfo` SET `Pin`='$hpin',`resetpassword`='TRUE' WHERE `Mobile`='$usermobile' AND `Employer`='$emp'";
                 $stm = $this->conn->prepare($qry);  
                 if($stm->execute()===TRUE){
                     echo "OTP shared to registered mailid";
@@ -533,7 +536,7 @@
                     // echo $rowCount;
                     
                     if($rowCount!=0){
-                        $qry = "UPDATE `UserInfo` SET `Pin`='$pin',`resetpassword`='TRUE' WHERE `Mobile`='$usermobile'";
+                        $qry = "UPDATE `UserInfo` SET `Pin`='$pin',`resetpassword`='TRUE' WHERE `Mobile`='$usermobile' AND `Employer`='$emp'";
                         $stm = $this->conn->prepare($qry);  
                         if($stm->execute()===TRUE){
                             return "Completed";
@@ -557,7 +560,7 @@
                     $rowCount = $stm->rowCount();
     
                     if($rowCount!=0){
-                        $qry = "UPDATE `UserInfo` SET `Pin`='$pin', `Tocken`='$id', `resetpassword`='FALSE' WHERE `Mobile`='$usermobile'";
+                        $qry = "UPDATE `UserInfo` SET `Pin`='$pin', `Tocken`='$id', `resetpassword`='FALSE' WHERE `Mobile`='$usermobile' AND `Employer` = '$emp'";
                         $stm = $this->conn->prepare($qry);  
                         if($stm->execute()===TRUE){
                             return "Completed";
@@ -566,7 +569,7 @@
                     else{
                         
                         //process for password change by user
-                        $query = "SELECT * FROM `UserInfo` WHERE Mobile = '$usermobile'";
+                        $query = "SELECT * FROM `UserInfo` WHERE Mobile = '$usermobile' AND `Employer` = '$emp'";
                         
                         $stm = $this->conn->prepare($query);
                         $stm->execute();
@@ -574,7 +577,7 @@
                         $row = $stm->fetch(PDO::FETCH_ASSOC);
     
                         if($oldpass===$row['Pin'] || password_verify($oldpass,$row['Pin'])){
-                            $qry = "UPDATE `UserInfo` SET `Pin`='$pin' WHERE `Mobile`='$usermobile'";
+                            $qry = "UPDATE `UserInfo` SET `Pin`='$pin' WHERE `Mobile`='$usermobile' AND `Employer` = '$emp'";
                             $stm = $this->conn->prepare($qry);  
                             if($stm->execute()===TRUE){
                                 return "Completed";
@@ -634,9 +637,10 @@
             $mobile=trim($data['mobile']);
             $doj=trim($data['doj']);
             $leave=trim($data['leave']);
+            $emp=trim($data['emp']);
             
-            $query = "UPDATE `EmployeeInfo` SET `Manager`='$manager',`ManagerID`='$managerid',`Position`='$position',`Department`='$department',`DOJ`='$doj',`LeaveCount`='$leave' WHERE `Mobile`='$mobile'; UPDATE `UserInfo` SET `Permission`='$permission' WHERE `Mobile`='$mobile';
-                        UPDATE `UserInfo` SET `Email`='$email' WHERE `Mobile`='$mobile';";
+            $query = "UPDATE `EmployeeInfo` SET `Manager`='$manager',`ManagerID`='$managerid',`Position`='$position',`Department`='$department',`DOJ`='$doj',`LeaveCount`='$leave' WHERE `Mobile`='$mobile'; UPDATE `UserInfo` SET `Permission`='$permission' WHERE `Mobile`='$mobile' AND `Employer` = '$emp';
+                        UPDATE `UserInfo` SET `Email`='$email' WHERE `Mobile`='$mobile' AND `Employer` = '$emp';";
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
                 return "Details updated successfully";
@@ -756,7 +760,7 @@
                     $stm = $this->conn->prepare($query);
                     if($stm->execute()===TRUE){
 
-                        $qry = "UPDATE `UserInfo` SET `Pin`='$hpin',`resetpassword`='TRUE' WHERE `Mobile`='$mobile'";
+                        $qry = "UPDATE `UserInfo` SET `Pin`='$hpin',`resetpassword`='TRUE' WHERE `Mobile`='$mobile' AND `Employer` = '$emp'";
                         $stm = $this->conn->prepare($qry);  
                         if($stm->execute()===TRUE){
                             echo "OTP shared to registered mailid";

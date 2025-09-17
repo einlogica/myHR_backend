@@ -49,7 +49,7 @@
     
     
             //Mark offday for next day as per holiday table
-            $query = "INSERT INTO `Attendance` (`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `Mobile`,`Name`,'0.00','0.00','$next_date','00:00:00','0.00','0.00','00:00:00','Holiday','Holiday' FROM `EmployeeInfo` WHERE `Employer` in (SELECT Employer FROM `holidaycalendar` WHERE `Date`='$next_date')";
+            $query = "INSERT INTO `Attendance` (`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`,`Employer`) SELECT `Mobile`,`Name`,'0.00','0.00','$next_date','00:00:00','0.00','0.00','00:00:00','Holiday','Holiday',`EmployeeInfo`.`Employer` FROM `EmployeeInfo` WHERE `Employer` in (SELECT Employer FROM `holidaycalendar` WHERE `Date`='$next_date')";
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
                 $affectedRows = $stm->rowCount();
@@ -58,7 +58,7 @@
             } 
 
             //Mark Holiday for current Day if SUNDAY
-            $query = "INSERT INTO `Attendance` (`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `EmployeeInfo`.`Mobile`,`EmployeeInfo`.`Name`,'0.00','0.00','$CurrDate','00:00:00','0.00','0.00','00:00:00',IF(`LeaveTracker`.`Status`='Approved','Leave','Holiday'),IF(`LeaveTracker`.`Status`='Approved','Leave','Holiday') FROM `EmployeeInfo` LEFT JOIN `LeaveTracker` ON `EmployeeInfo`.`Mobile`=`LeaveTracker`.`Mobile` AND `LeaveTracker`.`LeaveDate`='$CurrDate' WHERE `EmployeeInfo`.`Status`='ACTIVE' AND `EmployeeInfo`.`Employer` IN (SELECT `Employer` FROM `Settings` WHERE FIND_IN_SET('$day', `WeekOff`) = 1) AND `EmployeeInfo`.`Mobile` NOT IN (SELECT `Mobile` FROM `Attendance` WHERE `Date` ='$CurrDate')";
+            $query = "INSERT INTO `Attendance` (`Employer`,`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `EmployeeInfo`.`Employer`,`EmployeeInfo`.`Mobile`,`EmployeeInfo`.`Name`,'0.00','0.00','$CurrDate','00:00:00','0.00','0.00','00:00:00',IF(`LeaveTracker`.`Status`='Approved','Leave','Holiday'),IF(`LeaveTracker`.`Status`='Approved','Leave','Holiday') FROM `EmployeeInfo` LEFT JOIN `LeaveTracker` ON `EmployeeInfo`.`Mobile`=`LeaveTracker`.`Mobile` AND `LeaveTracker`.`LeaveDate`='$CurrDate' WHERE `EmployeeInfo`.`Status`='ACTIVE' AND `EmployeeInfo`.`Employer` IN (SELECT `Employer` FROM `Settings` WHERE FIND_IN_SET('$day', `WeekOff`) = 1) AND `EmployeeInfo`.`Mobile` NOT IN (SELECT `Mobile` FROM `Attendance` WHERE `Date` ='$CurrDate')";
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
                 $affectedRows = $stm->rowCount();
@@ -68,7 +68,7 @@
     
             //Mark Absent for current Day for those didnt apply
             // $query = "INSERT INTO `Attendance` (`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Location`) VALUES SELECT `Mobile`,`Name`,'0.00','0.00','$pre_date','00:00:00','0.00','0.00','00:00:00','Absent' FROM `EmployeeInfo` WHERE `Mobile` NOT IN (SELECT `Mobile` FROM `Attendance` WHERE `Date` ='$pre_date' )";
-            $query = "INSERT INTO `Attendance` (`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `EmployeeInfo`.`Mobile`,`EmployeeInfo`.`Name`,'0.00','0.00','$CurrDate','00:00:00','0.00','0.00','00:00:00',IF(`LeaveTracker`.`Status`='Approved','Leave','Absent'),IF(`LeaveTracker`.`Status`='Approved','Leave','Absent') FROM `EmployeeInfo` LEFT JOIN `LeaveTracker` ON `EmployeeInfo`.`Mobile`=`LeaveTracker`.`Mobile` AND `LeaveTracker`.`LeaveDate`='$CurrDate' WHERE `EmployeeInfo`.`Status`='ACTIVE' AND `EmployeeInfo`.`Employer` IN (SELECT `Employer` FROM `Settings` WHERE FIND_IN_SET('$day', `WeekOff`) = 0) AND `EmployeeInfo`.`Mobile` NOT IN (SELECT `Mobile` FROM `Attendance` WHERE `Date` ='$CurrDate')";
+            $query = "INSERT INTO `Attendance` (`Employer`,`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `EmployeeInfo`.`Employer`,`EmployeeInfo`.`Mobile`,`EmployeeInfo`.`Name`,'0.00','0.00','$CurrDate','00:00:00','0.00','0.00','00:00:00',IF(`LeaveTracker`.`Status`='Approved','Leave','Absent'),IF(`LeaveTracker`.`Status`='Approved','Leave','Absent') FROM `EmployeeInfo` LEFT JOIN `LeaveTracker` ON `EmployeeInfo`.`Mobile`=`LeaveTracker`.`Mobile` AND `LeaveTracker`.`LeaveDate`='$CurrDate' WHERE `EmployeeInfo`.`Status`='ACTIVE' AND `EmployeeInfo`.`Employer` IN (SELECT `Employer` FROM `Settings` WHERE FIND_IN_SET('$day', `WeekOff`) = 0) AND `EmployeeInfo`.`Mobile` NOT IN (SELECT `Mobile` FROM `Attendance` WHERE `Date` ='$CurrDate')";
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
                 $affectedRows = $stm->rowCount();
@@ -79,7 +79,7 @@
 
     
             //Mark Leave for those who applied leave
-            $query = "INSERT INTO `Attendance` (`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `EmployeeInfo`.`Mobile`,`EmployeeInfo`.`Name`,'0.00','0.00','$next_date','00:00:00','0.00','0.00','00:00:00','Leave','Leave' FROM `EmployeeInfo` LEFT JOIN `LeaveTracker` ON `EmployeeInfo`.`Mobile`=`LeaveTracker`.`Mobile` AND `LeaveTracker`.`LeaveDate`='$next_date' WHERE `EmployeeInfo`.`Status`='ACTIVE' AND `LeaveTracker`.`Status`='Approved'";
+            $query = "INSERT INTO `Attendance` (`Employer`,`Mobile`,`Name`,`PosLat`,`PosLong`,`Date`,`InTime`,`PosLat2`,`PosLong2`,`OutTime`,`Status`,`Location`) SELECT `EmployeeInfo`.`Employer`,`EmployeeInfo`.`Mobile`,`EmployeeInfo`.`Name`,'0.00','0.00','$next_date','00:00:00','0.00','0.00','00:00:00','Leave','Leave' FROM `EmployeeInfo` LEFT JOIN `LeaveTracker` ON `EmployeeInfo`.`Mobile`=`LeaveTracker`.`Mobile` AND `LeaveTracker`.`LeaveDate`='$next_date' WHERE `EmployeeInfo`.`Status`='ACTIVE' AND `LeaveTracker`.`Status`='Approved'";
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
                 $affectedRows = $stm->rowCount();

@@ -56,6 +56,9 @@
                 else if($selection==='Expense'){
                     $selection='expensetype';
                 }
+                else if($selection==='Assets'){
+                    $selection='assetstype';
+                }
     
                 $query = "SELECT * FROM `$selection` WHERE `Employer`='$emp' ORDER BY `Type` asc";
                 $stm = $this->conn->prepare($query);
@@ -125,6 +128,9 @@
                 }
                 else if($selection==='Expense'){
                     $selection='expensetype';
+                }
+                else if($selection==='Assets'){
+                    $selection='assetstype';
                 }
                 
                 $query = "Delete FROM `$selection` WHERE `Employer`='$emp'";

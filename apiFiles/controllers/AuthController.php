@@ -62,7 +62,7 @@
 
 
                 
-                $query = "SELECT `Userinfo`.`Pin`,`settings`.`Status`,`UserInfo`.`Permission` FROM `Userinfo` LEFT JOIN `settings` ON `UserInfo`.`Employer`=`settings`.`Employer` Where `Mobile`='$usermobile'";
+                $query = "SELECT `UserInfo`.`ID`,`Userinfo`.`Pin`,`settings`.`Status`,`UserInfo`.`Permission`,`UserInfo`.`Employer` FROM `Userinfo` LEFT JOIN `settings` ON `UserInfo`.`Employer`=`settings`.`Employer` Where `Mobile`='$usermobile' ORDER BY `UserInfo`.`ID` DESC LIMIT 1";
                 $stm = $this->conn->prepare($query);
                 $stm->execute();
                 $rowCount = $stm->rowCount();
@@ -78,14 +78,14 @@
                     
                         if($row['Pin']===$userpass || password_verify($userpass,$row['Pin'])){
         
-                            $query = "UPDATE `UserInfo` SET `appversion`='$app', `lastlogin`= NOW() WHERE `Mobile`='$usermobile'";
+                            $query = "UPDATE `UserInfo` SET `appversion`='$app', `lastlogin`= NOW() WHERE `Mobile`='$usermobile' AND `Employer`='$row[Employer]'";
                             $stm = $this->conn->prepare($query);
                             $stm->execute();
                             
                             $query ="SELECT `UserInfo`.Name,`UserInfo`.Mobile,`UserInfo`.Email,`UserInfo`.EmployeeID,`UserInfo`.Employer,`UserInfo`.Permission,`UserInfo`.resetpassword,
                                     `EmployeeInfo`.Department,`EmployeeInfo`.Position,`EmployeeInfo`.Manager,`EmployeeInfo`.ManagerID,`EmployeeInfo`.DOJ,`UserInfo`.Tocken,
                                     `EmployeeInfo`.ImageFile,`EmployeeInfo`.LeaveCount,IF('$row[Status]'='0' AND '$row[Permission]'='Admin','LOCKED',`EmployeeInfo`.`Status`) AS `Status` FROM `UserInfo` 
-                                    LEFT JOIN `EmployeeInfo` ON `UserInfo`.Mobile=`EmployeeInfo`.Mobile WHERE `UserInfo`.Mobile = '$usermobile' AND `EmployeeInfo`.`Status`!='INACTIVE'";
+                                    LEFT JOIN `EmployeeInfo` ON `UserInfo`.Mobile=`EmployeeInfo`.Mobile WHERE `UserInfo`.Mobile = '$usermobile' AND `UserInfo`.`Employer`='$row[Employer]' AND `EmployeeInfo`.`Status`!='INACTIVE'";
                         
                             $stm = $this->conn->prepare($query);
                             $stm->execute();
@@ -145,18 +145,7 @@
             if (!filter_var($useremail, FILTER_VALIDATE_EMAIL)) {
                 return "Invalid MailID";
             }
-    
-            $query = "SELECT * FROM `Userinfo` Where `Mobile`='$usermobile' OR `Email`='$useremail'";
-            $stm = $this->conn->prepare($query);
-            $stm->execute();
-            $rowCount = $stm->rowCount();
-            if($rowCount!=0){
-                return "Mobile/Email already registered";
-            }
-    
-            $pin = rand(100000, 999999);
-            $hpin = password_hash($pin, PASSWORD_DEFAULT);
-    
+
             // Remove spaces (both leading, trailing, and in-between spaces)
             $trimmedString = str_replace(' ', '', $employer);
     
@@ -181,6 +170,19 @@
                     break;
                 }
             }
+    
+            $query = "SELECT * FROM `Userinfo` Where (`Mobile`='$usermobile' OR `Email`='$useremail') AND `Employer`='$short'";
+            $stm = $this->conn->prepare($query);
+            $stm->execute();
+            $rowCount = $stm->rowCount();
+            if($rowCount!=0){
+                return "Mobile/Email already registered";
+            }
+    
+            $pin = rand(100000, 999999);
+            $hpin = password_hash($pin, PASSWORD_DEFAULT);
+    
+            
     
             date_default_timezone_set('Asia/Kolkata');
             $Time=date('H:i:s');

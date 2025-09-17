@@ -44,7 +44,7 @@
             $pre_date = date('Y-m-d', strtotime("-10 days"));
             
             //Check user
-            $query = "SELECT Permission FROM `UserInfo` WHERE `Mobile`='$usermobile' and `Permission`!='User'";
+            $query = "SELECT Permission FROM `UserInfo` WHERE `Mobile`='$usermobile' AND `Employer`='$emp' AND `Permission`!='User'";
             $stm = $this->conn->prepare($query);
             $stm->execute();
             $row = $stm->fetch(PDO::FETCH_ASSOC);
@@ -64,7 +64,7 @@
             
             if($rowCount!=0){
                 if($per==='Admin'){
-                    $query = "SELECT Day(Date) AS Day, Count(CASE WHEN Status = 'Absent' THEN 1 END) AS AbsentCount, Count(CASE WHEN Status = 'Present' THEN 1 END) AS PresentCount, Count(CASE WHEN Status = 'Leave' THEN 1 END) AS LeaveCount, $employee AS Total FROM attendance WHERE Date>$pre_date AND Mobile in ( Select Mobile from userinfo Where Employer='$emp') GROUP BY Date";
+                    $query = "SELECT Day(Date) AS Day, Count(CASE WHEN Status = 'Absent' THEN 1 END) AS AbsentCount, Count(CASE WHEN Status = 'Present' THEN 1 END) AS PresentCount, Count(CASE WHEN Status = 'Leave' THEN 1 END) AS LeaveCount, $employee AS Total FROM attendance WHERE Date>$pre_date AND `Employer`='$emp' GROUP BY Date";
                 }
                 else{
                     $query = "SELECT Day(Date) AS Day, Count(CASE WHEN Status = 'Absent' THEN 1 END) AS AbsentCount, Count(CASE WHEN Status = 'Present' THEN 1 END) AS PresentCount, Count(CASE WHEN Status = 'Leave' THEN 1 END) AS LeaveCount, $employee AS Total FROM attendance WHERE Date>$pre_date AND Mobile in ( Select Mobile from employeeinfo Where Employer='$emp' AND ManagerID in (SELECT EmployeeID FROM employeeinfo WHERE Mobile='$usermobile' AND `Employer`='$emp')) GROUP BY Date";
@@ -82,7 +82,6 @@
     
     
         }
-
 
         public function get_attendanceStatus($data){
         
@@ -123,6 +122,46 @@
         }
 
 
+        // public function get_attendanceStatus($data){
+        
+           
+        
+        //     if(!isset($data['usermobile'])){
+        //         return;
+        //     } 
+            
+        //     $usermobile=trim($data['usermobile']);
+        //     $emp=trim($data['emp']);
+
+        //     $qry = "SELECT `TimeZone` FROM `settings` WHERE `Employer`='$emp'";
+        //     $stm = $this->conn->prepare($qry);
+        //     $stm->execute();
+        //     $tz = $stm->fetch(PDO::FETCH_ASSOC);
+        //     $timezone = $tz['TimeZone'];
+        
+        //     date_default_timezone_set($timezone);
+        //     // date_default_timezone_set('Asia/Kolkata');
+        
+        //     $Time=date('H:i:s');
+        //     $CurrDate=date('Y-m-d');
+            
+        //     $query = "SELECT Attendance.*,LeaveTracker.Days FROM `Attendance` LEFT JOIN `LeaveTracker` ON Attendance.Mobile=LeaveTracker.Mobile AND Attendance.Employer=LeaveTracker.Employer AND Attendance.Date=LeaveTracker.LeaveDate WHERE Attendance.Mobile = '$usermobile' AND Attendance.Employer = '$emp'  AND  Attendance.Date = '$CurrDate'";
+                
+        //     $stm = $this->conn->prepare($query);
+        //     $stm->execute();
+        //     $rowCount = $stm->rowCount();
+            
+        //     if($rowCount!=0){
+        //         $row = $stm->fetch(PDO::FETCH_ASSOC);
+        //         return json_encode($row);
+                
+        //     }
+        //     else{
+        //         return "Pending";
+        //     }
+        // }
+
+
         public function markAbsent($data){
         
             if(!isset($data['usermobile']) || !isset($data['date']) || !isset($data['emp'])){
@@ -133,7 +172,7 @@
             $date=trim($data['date']);
             $emp=trim($data['emp']);
     
-            $query = "UPDATE `Attendance` SET PosLat=0.0,PosLong=0.0,InTime='00:00:00',PosLat2=0.0,PosLong2=0.0,OutTime='00:00:00',Status='Absent',Location='Absent' WHERE Mobile='$usermobile' AND Date='$date'";
+            $query = "UPDATE `Attendance` SET PosLat=0.0,PosLong=0.0,InTime='00:00:00',PosLat2=0.0,PosLong2=0.0,OutTime='00:00:00',Status='Absent',Location='Absent' WHERE Mobile='$usermobile' AND `Employer`='$emp' AND Date='$date'";
             $stm = $this->conn->prepare($query);
             if($stm->execute()){
                 return "Success";
@@ -158,13 +197,16 @@
             $posLong=trim($data['posLong']);
             $location=trim($data['location']);
             $type=trim($data['type']);
+            // $emp=trim($data['emp']);
             
+            // $qry = "SELECT * FROM `settings` WHERE `Employer`='$emp'";
             $qry = "SELECT * FROM `settings` WHERE `Employer`=(SELECT `Employer` FROM `userinfo` WHERE `Mobile`='$usermobile')";
             $stm = $this->conn->prepare($qry);
             $stm->execute();
             $tz = $stm->fetch(PDO::FETCH_ASSOC);
             $timezone = $tz['TimeZone'];
             $activityAttendance = $tz['ActivityAttendance'];
+            $emp = $tz['Employer'];
 
             date_default_timezone_set($timezone);
             // date_default_timezone_set('Asia/Kolkata');
@@ -173,7 +215,7 @@
 
             if($activityAttendance==='1'){
 
-                $query = "SELECT * FROM `Activity` WHERE Mobile = '$usermobile' AND ActivityDate = '$CurrDate' AND `Date` = '$CurrDate'";
+                $query = "SELECT * FROM `Activity` WHERE Mobile = '$usermobile' AND `Employer`='$emp' AND ActivityDate = '$CurrDate' AND `Date` = '$CurrDate'";
                 $stm = $this->conn->prepare($query);
                 $stm->execute();
                 $rowCount = $stm->rowCount();
@@ -196,7 +238,7 @@
                 $rowCount = $stm->rowCount();
     
                 if($rowCount===0){
-                    $query = "INSERT INTO `Attendance` (`Mobile`, `Name`, `PosLat`, `PosLong`,`Date`,`InTime`, `PosLat2`, `PosLong2`,`OutTime`,`Status`,`Location`,`Flag`) VALUES ('$usermobile','$username','$posLat','$posLong','$CurrDate','$Time','0.00','0.00','00:00:00','Present','$location','false')";
+                    $query = "INSERT INTO `Attendance` (`Mobile`, `Name`, `PosLat`, `PosLong`,`Date`,`InTime`, `PosLat2`, `PosLong2`,`OutTime`,`Status`,`Location`,`Flag`,`Employer`) VALUES ('$usermobile','$username','$posLat','$posLong','$CurrDate','$Time','0.00','0.00','00:00:00','Present','$location','false','$emp')";
                     $stm = $this->conn->prepare($query);
                     if($stm->execute()){
                         return json_encode(array("Status"=>"Attendance applied","Mess"=>"Checkin has been applied"));
@@ -207,7 +249,7 @@
                 }
                 else{
                     // return json_encode(array("Status"=>"Attendance applied","Mess"=>"Attendance already applied"));
-                    $query = "UPDATE `Attendance` SET `PosLat`='$posLat',`PosLong`='$posLong',`InTime`='$Time',`Location`='$location',`Status`= CASE WHEN `Status`='Holiday' THEN 'Present' ELSE `Status` END WHERE `Mobile`='$usermobile' AND `Date`='$CurrDate'";
+                    $query = "UPDATE `Attendance` SET `PosLat`='$posLat',`PosLong`='$posLong',`InTime`='$Time',`Location`='$location',`Status`= CASE WHEN `Status`='Holiday' THEN 'Present' ELSE `Status` END WHERE `Mobile`='$usermobile' AND `Employer`='$emp' AND `Date`='$CurrDate'";
                     $stm = $this->conn->prepare($query);
                     if($stm->execute()){
                         return json_encode(array("Status"=>"Attendance updated","Mess"=>"Checkin has been updated"));
@@ -220,7 +262,7 @@
                 
             }
             else if($type==='CheckOut'){
-                $query = "UPDATE `Attendance` SET `PosLat2`='$posLat',`PosLong2`='$posLong',`OutTime`='$Time',`OutDate`='$CurrDate',`Duration`=TIMEDIFF(`OutTime`,`InTime`) WHERE `Mobile`='$usermobile' AND `Date`='$CurrDate'";
+                $query = "UPDATE `Attendance` SET `PosLat2`='$posLat',`PosLong2`='$posLong',`OutTime`='$Time',`OutDate`='$CurrDate',`Duration`=TIMEDIFF(`OutTime`,`InTime`) WHERE `Mobile`='$usermobile' AND `Employer`='$emp' AND `Date`='$CurrDate'";
                 $stm = $this->conn->prepare($query);
                 if($stm->execute()){
                     return json_encode(array("Status"=>"Attendance applied","Mess"=>"Checkout has been applied"));
@@ -244,6 +286,7 @@
             $usermobile=trim($data['usermobile']);
             $month=trim($data['month']);
             $year=trim($data['year']);
+            // $emp=trim($data['emp']);
             
             // date_default_timezone_set('Asia/Kolkata');
         
@@ -277,17 +320,17 @@
             $emp=trim($data['emp']);
             // echo $usermobile;
             
-            $query = "SELECT `Permission` FROM `UserInfo` WHERE `Mobile`='$usermobile'";
+            $query = "SELECT `Permission` FROM `UserInfo` WHERE `Mobile`='$usermobile' AND `Employer`='$emp'";
             $stm = $this->conn->prepare($query);
             $stm->execute();
             $row = $stm->fetch(PDO::FETCH_ASSOC);
             $permission = $row['Permission'];
             
             if($permission==='Admin'){
-                $query = "SELECT * FROM `Regularization` WHERE Mobile in (SELECT Mobile FROM `EmployeeInfo` WHERE Employer='$emp')";
+                $query = "SELECT * FROM `Regularization` WHERE Employer='$emp'";
             }
             else if($permission==='Manager'){
-                $query = "SELECT * FROM `Regularization` WHERE Mobile in (SELECT Mobile FROM `EmployeeInfo` WHERE Employer='$emp' AND ManagerID in (SELECT EmployeeID FROM `EmployeeInfo` WHERE `Mobile`='$usermobile'))";
+                $query = "SELECT * FROM `Regularization` WHERE Mobile in (SELECT Mobile FROM `EmployeeInfo` WHERE Employer='$emp' AND ManagerID in (SELECT EmployeeID FROM `EmployeeInfo` WHERE `Mobile`='$usermobile' AND `Employer`='$emp'))";
             }    
             
             $stm = $this->conn->prepare($query);
@@ -313,24 +356,22 @@
             $comments=trim($data['comments']);
             $regIn=trim($data['regIn']);
             $regOut=trim($data['regOut']);
-            $emp="";
-            if(isset($data['emp'])){
-                $emp=$data['emp'];
-            }
+            $emp=trim($data['emp']);
+            
             
             $formattedDate = date_format(date_create("$date"),"Y-m-d");
     
-            $query = "SELECT * FROM `Regularization` WHERE Mobile = '$usermobile' AND Date = '$formattedDate'";
+            $query = "SELECT * FROM `Regularization` WHERE Mobile = '$usermobile' AND `Employer`='$emp' AND Date = '$formattedDate'";
             $stm = $this->conn->prepare($query);
             $stm->execute();
             $rowCount = $stm->rowCount();
     
             if($rowCount===0){
-                $query = "INSERT INTO `Regularization` ( `Name`, `Mobile`, `Date`, `InTime`, `OutTime`, `Comments`) VALUES ('$username','$usermobile','$formattedDate','$regIn','$regOut','$comments')";
+                $query = "INSERT INTO `Regularization` ( `Name`, `Mobile`, `Date`, `InTime`, `OutTime`, `Comments`,`Employer`) VALUES ('$username','$usermobile','$formattedDate','$regIn','$regOut','$comments','$emp')";
                 $stm = $this->conn->prepare($query);
                 if($stm->execute()===TRUE){
                     
-                    $query = "UPDATE `Attendance` SET `Flag` = 'true' WHERE `Mobile`='$usermobile' AND `Date`='$formattedDate'";
+                    $query = "UPDATE `Attendance` SET `Flag` = 'true' WHERE `Mobile`='$usermobile' AND `Employer`='$emp' AND `Date`='$formattedDate'";
                     $stm = $this->conn->prepare($query);
                     if($stm->execute()===TRUE){
                         $controller = new FCMController($this->conn);
@@ -369,22 +410,23 @@
             $usermobile=trim($data['usermobile']);
             $date=trim($data['date']);
             $status=trim($data['status']);
+            $emp=trim($data['emp']);
             
             if($status==="Approved"){
                 // $query = "UPDATE `Attendance` SET `Status` = 'Regularized', `Location`=(SELECT `Comments` FROM `Regularization` WHERE `Mobile` = '$usermobile' AND `Date`='$date'), `InTime`=(SELECT `InTime` FROM `Regularization` WHERE `Mobile` = '$usermobile' AND `Date`='$date'),`OutTime`=(SELECT `OutTime` FROM `Regularization` WHERE `Mobile` = '$usermobile' AND `Date`='$date') WHERE `Mobile` = '$usermobile' AND `Date`='$date'";
                 
-                $query ="UPDATE `Attendance` JOIN `Regularization` ON `Attendance`.`Mobile`=`Regularization`.`Mobile` AND `Attendance`.`Date`=`Regularization`.`Date` SET `Attendance`.`Status`='Present',`Attendance`.`Flag`='false',`Attendance`.`InTime`=`Regularization`.`InTime`,`Attendance`.`OutTime`=`Regularization`.`OutTime`,`Attendance`.`Comments`=`Regularization`.`Comments`,`Attendance`.`Location`= if(`Attendance`.`Location`='Absent','Regularized',`Attendance`.`Location`)  WHERE `Attendance`.`Mobile` = '$usermobile' AND `Attendance`.`Date`='$date' ";
+                $query ="UPDATE `Attendance` JOIN `Regularization` ON `Attendance`.`Employer`=`Regularization`.`Employer` AND `Attendance`.`Mobile`=`Regularization`.`Mobile` AND `Attendance`.`Date`=`Regularization`.`Date` SET `Attendance`.`Status`='Present',`Attendance`.`Flag`='false',`Attendance`.`InTime`=`Regularization`.`InTime`,`Attendance`.`OutTime`=`Regularization`.`OutTime`,`Attendance`.`Comments`=`Regularization`.`Comments`,`Attendance`.`Location`= if(`Attendance`.`Location`='Absent','Regularized',`Attendance`.`Location`)  WHERE `Attendance`.`Mobile` = '$usermobile' AND `Attendance`.`Employer`='$emp' AND `Attendance`.`Date`='$date' ";
                 
             }
             else{
                 
-                $query = "UPDATE `Attendance` SET `Flag`='false' WHERE `Mobile` = '$usermobile' AND `Date`='$date'";
+                $query = "UPDATE `Attendance` SET `Flag`='false' WHERE `Mobile` = '$usermobile' AND `Employer`='$emp' AND `Date`='$date'";
                 
             }
             
             $stm = $this->conn->prepare($query);
             if($stm->execute()===TRUE){
-                $query = "DELETE FROM `Regularization` WHERE `Mobile` = '$usermobile' AND `Date`='$date'";
+                $query = "DELETE FROM `Regularization` WHERE `Mobile` = '$usermobile' AND `Employer`='$emp' AND `Date`='$date'";
                 $stm = $this->conn->prepare($query);
                 if($stm->execute()===TRUE){
                     $controller = new FCMController($this->conn);
