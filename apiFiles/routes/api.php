@@ -24,6 +24,7 @@ require_once '/var/private_files/controllers/LocationController.php';
 require_once '/var/private_files/controllers/ExpenseController.php';
 require_once '/var/private_files/controllers/FCMController.php';
 require_once '/var/private_files/controllers/ExtraController.php';
+require_once '/var/private_files/controllers/AssetController.php';
 
 $requestUri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 $resource = $requestUri[1] ?? '';
@@ -67,6 +68,29 @@ elseif(decodeJWT()!=''){
 
     switch ($resource){
 
+
+        case 'asset':
+                $controller = new AssetController($db);
+                if ($action === 'get_assets') {
+                    echo $controller->getasset();
+                } 
+                elseif ($action === 'add_asset') {
+                    $resource2 = $requestUri[3] ?? '';
+                
+                    if($resource2==='accept'){
+                        echo $controller->acceptasset();
+                    }
+                    else{
+                        echo $controller->addasset($data);
+                    }
+                }
+                elseif ($action === 'delete_asset') {
+                    echo $controller->delasset($data);
+                }
+                elseif ($action === 'update_asset') {
+                    echo $controller->patchasset($data);
+                }
+                break; 
         case 'attendance':
             $controller = new AttendanceController($db);
             if($action == 'getMonthlyAttendance'){

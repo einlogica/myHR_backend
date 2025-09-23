@@ -10,7 +10,8 @@ $db_pass = "+PTrCO3i";
 //$server_name = "localhost";
 //$conn = mysqli_connect($server_name, $mysql_username, $mysql_password,$db_name);
 
-$sslCaPath = "/var/private_files/config/DigiCertGlobalRootCA.crt.pem";
+// $sslCaPath = "/var/private_files/config/DigiCertGlobalRootCA.crt.pem";
+$sslCaPath = "/var/private_files/config/rootCA.pem";
 
 // Connection options
 $options = [
@@ -21,6 +22,7 @@ try{
  $db = new PDO ($dns, $db_user, $db_pass, $options);
 }catch( PDOException $e){
  $error = $e->getMessage();
+ 
  echo $error;
 }
 
