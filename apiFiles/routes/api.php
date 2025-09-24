@@ -72,7 +72,7 @@ elseif(decodeJWT()!=''){
         case 'asset':
                 $controller = new AssetController($db);
                 if ($action === 'get_assets') {
-                    echo $controller->getasset();
+                    echo $controller->get_assets();
                 } 
                 elseif ($action === 'add_asset') {
                     $resource2 = $requestUri[3] ?? '';

@@ -82,10 +82,10 @@
                             $stm = $this->conn->prepare($query);
                             $stm->execute();
                             
-                            $query ="SELECT `UserInfo`.Name,`UserInfo`.Mobile,`UserInfo`.Email,`UserInfo`.EmployeeID,`UserInfo`.Employer,`UserInfo`.Permission,`UserInfo`.resetpassword,
+                            $query ="SELECT `UserInfo`.`ID`,`UserInfo`.Name,`UserInfo`.Mobile,`UserInfo`.Email,`UserInfo`.EmployeeID,`UserInfo`.Employer,`UserInfo`.Permission,`UserInfo`.resetpassword,
                                     `EmployeeInfo`.Department,`EmployeeInfo`.Position,`EmployeeInfo`.Manager,`EmployeeInfo`.ManagerID,`EmployeeInfo`.DOJ,`UserInfo`.Tocken,
                                     `EmployeeInfo`.ImageFile,`EmployeeInfo`.LeaveCount,IF('$row[Status]'='0' AND '$row[Permission]'='Admin','LOCKED',`EmployeeInfo`.`Status`) AS `Status` FROM `UserInfo` 
-                                    LEFT JOIN `EmployeeInfo` ON `UserInfo`.Mobile=`EmployeeInfo`.Mobile WHERE `UserInfo`.Mobile = '$usermobile' AND `UserInfo`.`Employer`='$row[Employer]' AND `EmployeeInfo`.`Status`!='INACTIVE'";
+                                    LEFT JOIN `EmployeeInfo` ON `UserInfo`.`ID`=`EmployeeInfo`.`UserID` AND `UserInfo`.Mobile=`EmployeeInfo`.Mobile WHERE `UserInfo`.Mobile = '$usermobile' AND `UserInfo`.`Employer`='$row[Employer]' AND `EmployeeInfo`.`Status`!='INACTIVE'";
                         
                             $stm = $this->conn->prepare($query);
                             $stm->execute();

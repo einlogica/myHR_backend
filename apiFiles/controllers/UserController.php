@@ -212,24 +212,24 @@
             
             if($filter==='ALL'){
                 // $query = "SELECT Mobile,Name,EmployeeID,Department,Position,Manager,ManagerID,Permission,LeaveCount,LeaveBalance,ImageFile FROM `ExpenseUsers`";
-                $query = "SELECT `EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Employer`='$emp'";
+                $query = "SELECT `UserInfo`.`ID`,`EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Employer`='$emp'";
                 
             }
             else if($filter==='MANAGERLIST'){
                 // $query = "SELECT Mobile,Name,EmployeeID,Department,Position,Manager,ManagerID,,LeaveCount,LeaveBalance,ImageFile FROM `ExpenseUsers` WHERE `Permission` ='Manager' or `Permission` ='Admin' ";
-                $query = "SELECT `EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Employer`='$emp' AND (`UserInfo`.`Permission` ='Manager' OR `UserInfo`.`Permission` ='Admin') ";
+                $query = "SELECT `UserInfo`.`ID`,`EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Employer`='$emp' AND (`UserInfo`.`Permission` ='Manager' OR `UserInfo`.`Permission` ='Admin') ";
             }
             else if($filter==='MANAGER'){
                 // $query = "SELECT ExpenseUsers.Mobile,ExpenseUsers.Name,ExpenseUsers.EmployeeID,ExpenseUsers.Department,ExpenseUsers.Position,ExpenseUsers.Manager,ExpenseUsers.ManagerID,ExpenseUsers.Permission,Att.Location,ExpenseUsers.LeaveCount,ExpenseUsers.LeaveBalance,ExpenseUsers.ImageFile FROM `ExpenseUsers` LEFT JOIN (SELECT Location,Mobile FROM `Attendance` WHERE `Date`='$CurrDate') as `Att` ON ExpenseUsers.Mobile=Att.Mobile WHERE ExpenseUsers.ManagerID in (SELECT EmployeeID FROM `ExpenseUsers` Where `Mobile`='$mobile')";
-                $query = "SELECT `EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email`,Att.Location,Att.Status FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` LEFT JOIN (SELECT Status,Location,Mobile FROM `Attendance` WHERE `Date`='$CurrDate') as `Att` ON `EmployeeInfo`.`Mobile`=Att.`Mobile` WHERE `EmployeeInfo`.`ManagerID` in (SELECT EmployeeID FROM `EmployeeInfo` Where `Mobile`='$mobile') AND `EmployeeInfo`.`Employer`='$emp'";
+                $query = "SELECT ``UserInfo`.`ID`,EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email`,Att.Location,Att.Status FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` LEFT JOIN (SELECT Status,Location,Mobile FROM `Attendance` WHERE `Date`='$CurrDate') as `Att` ON `EmployeeInfo`.`Mobile`=Att.`Mobile` WHERE `EmployeeInfo`.`ManagerID` in (SELECT EmployeeID FROM `EmployeeInfo` Where `Mobile`='$mobile') AND `EmployeeInfo`.`Employer`='$emp'";
             }
             else if($filter === 'ONE'){
                 // $query = "SELECT Mobile,Name,EmployeeID,Department,Position,Manager,ManagerID,Permission,LeaveCount,LeaveBalance,ImageFile FROM `ExpenseUsers` WHERE `Mobile` ='$mobile' ";
-                $query = "SELECT `EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Mobile` ='$mobile' AND `EmployeeInfo`.`Employer`='$emp'";
+                $query = "SELECT `UserInfo`.`ID`,`EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE `EmployeeInfo`.`Mobile` ='$mobile' AND `EmployeeInfo`.`Employer`='$emp'";
             }
             else if($filter === 'SUPER'){
                 // $query = "SELECT Mobile,Name,EmployeeID,Department,Position,Manager,ManagerID,Permission,LeaveCount,LeaveBalance,ImageFile FROM `ExpenseUsers` WHERE `Mobile` ='$mobile' ";
-                $query = "SELECT `UserInfo`.`Employer`,`EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN 
+                $query = "SELECT `UserInfo`.`ID`,`UserInfo`.`Employer`,`EmployeeInfo`.*,`UserInfo`.`Permission`,`UserInfo`.`Email` FROM `EmployeeInfo` LEFT JOIN 
                             `UserInfo` ON `EmployeeInfo`.`Mobile`=`UserInfo`.`Mobile` WHERE 
                             `EmployeeInfo`.`Status`='ACTIVE' AND `UserInfo`.`Permission`='Admin' ORDER BY  `EmployeeInfo`.`Employer`,`EmployeeInfo`.`Name`";
     
@@ -397,19 +397,31 @@
                         
                         // $query = "INSERT INTO `ExpenseUsers` (`Name`, `Mobile`, `EmployeeID`, `Manager`, `ManagerID`, `Position`, `Department`, `Pin`, `Permission`, `LeaveCount`, `LeaveBalance`) VALUES ('$user[Name]','$user[Mobile]','$user[EmployeeID]','$user[Manager]','$user[ManagerID]','$user[Position]','$user[Department]','1111','$user[Permission]','$user[LeaveCount]','$user[LeaveCount]')";
                         
-                        $query = "INSERT INTO `EmployeeInfo` (`Name`, `Mobile`, `EmployeeID`,`Employer`, `DOJ`, `Manager`, `ManagerID`, `Position`,`Department`, `LeaveCount`, `ImageFile`, `Status`) VALUES ('$user[Name]','$user[Mobile]','$user[EmployeeID]','$user[Employer]','$user[DOJ]','$user[Manager]','$user[ManagerID]','$user[Position]','$user[Department]', '$user[LeaveCount]','Def','ACTIVE');
-                                    INSERT INTO `UserInfo` (`Name`, `Mobile`,`Email`,`EmployeeID`,`Employer`,`Pin`, `Permission`, `resetpassword`) VALUES ('$user[Name]','$user[Mobile]', '$user[Email]','$user[EmployeeID]','$user[Employer]','$hpin','$user[Permission]','TRUE');
-                                    INSERT INTO `PersonalData` (`Name`,`Mobile`,`Employer`,`Sex`, `DOB`, `AddL1`, `AddL2`, `AddL3`, `Zip`, `BloodGroup`, `EmContactName`, `EmContactNum`, `BankName`, `AccNum`,`PAN`) VALUES ('$user[Name]','$user[Mobile]','$user[Employer]','$user[Sex]','$user[DOB]','$user[AL1]','$user[AL2]','$user[AL3]','$user[Zip]','$user[BG]','$user[EmName]','$user[EmNum]','$user[BankName]','$user[AccNo]','$user[PAN]');";
-                        
+                        $query = "INSERT INTO `UserInfo` (`Name`, `Mobile`,`Email`,`EmployeeID`,`Employer`,`Pin`, `Permission`, `resetpassword`) VALUES ('$user[Name]','$user[Mobile]', '$user[Email]','$user[EmployeeID]','$user[Employer]','$hpin','$user[Permission]','TRUE')";
                         $stm = $this->conn->prepare($query);
                         if($stm->execute()===TRUE){
-                            $controller = new EmailController();
-                            $status = $controller->sendEmail($user['Name'],$user['Email'],$pin,"newuser");
-                            return json_encode(array("Status"=>"Success","Mess"=>"User added successfully"));
+
+                            $query = "SELECT * FROM `UserInfo` WHERE `Mobile` = '$user[Mobile]' AND `Employer`='$user[Employer]'";
+                            $stm = $this->conn->prepare($query);
+                            $stm->execute();
+                            $row = $stm->fetch(PDO::FETCH_ASSOC);
+                            $userid = $row['ID'];
+
+                            $query = "INSERT INTO `EmployeeInfo` (`UserID`,`Name`, `Mobile`, `EmployeeID`,`Employer`, `DOJ`, `Manager`, `ManagerID`, `Position`,`Department`, `LeaveCount`, `ImageFile`, `Status`) VALUES ('$userid','$user[Name]','$user[Mobile]','$user[EmployeeID]','$user[Employer]','$user[DOJ]','$user[Manager]','$user[ManagerID]','$user[Position]','$user[Department]', '$user[LeaveCount]','Def','ACTIVE');
+                                    INSERT INTO `PersonalData` (`UserID`,`Name`,`Mobile`,`Employer`,`Sex`, `DOB`, `AddL1`, `AddL2`, `AddL3`, `Zip`, `BloodGroup`, `EmContactName`, `EmContactNum`, `BankName`, `AccNum`,`PAN`) VALUES ('$userid','$user[Name]','$user[Mobile]','$user[Employer]','$user[Sex]','$user[DOB]','$user[AL1]','$user[AL2]','$user[AL3]','$user[Zip]','$user[BG]','$user[EmName]','$user[EmNum]','$user[BankName]','$user[AccNo]','$user[PAN]');";
+                        
+                            $stm = $this->conn->prepare($query);
+                            if($stm->execute()===TRUE){
+                                $controller = new EmailController();
+                                $status = $controller->sendEmail($user['Name'],$user['Email'],$pin,"newuser");
+                                return json_encode(array("Status"=>"Success","Mess"=>"User added successfully"));
+                            }
+                            else{
+                                return json_encode(array("Status"=>"Failed","Mess"=>"Failed to add user"));
+                            }
                         }
-                        else{
-                            return json_encode(array("Status"=>"Failed","Mess"=>"Failed to add user"));
-                        }
+
+                        
                     }
                     else{
                         return json_encode(array("Status"=>"Failed","Mess"=>"User mobile already exist"));
@@ -600,7 +612,7 @@
             
             // echo $filter;
             
-            $query = "SELECT Name,Mobile,EmployeeID,Manager,Position,Department,ImageFile FROM `EmployeeInfo` WHERE Status='ACTIVE' AND Employer='$emp' AND (LOWER(Name) LIKE LOWER('%$filter%') OR LOWER(Department) LIKE LOWER('%$filter%') OR Mobile LIKE '%$filter%' OR LOWER(Position) LIKE LOWER('%$filter%'))";
+            $query = "SELECT UserID,`Name`,Mobile,EmployeeID,Manager,Position,Department,ImageFile FROM `EmployeeInfo` WHERE Status='ACTIVE' AND Employer='$emp' AND (LOWER(Name) LIKE LOWER('%$filter%') OR LOWER(Department) LIKE LOWER('%$filter%') OR Mobile LIKE '%$filter%' OR LOWER(Position) LIKE LOWER('%$filter%'))";
             
             $stm = $this->conn->prepare($query);
             $stm->execute();

@@ -20,7 +20,7 @@
         public function parseasset($emp,$id){
 
 
-            $query = "SELECT `Role` FROM `userinfo` WHERE `ID`='$id'";
+            $query = "SELECT `Permission` FROM `userinfo` WHERE `ID`='$id'";
 
             
         
@@ -30,10 +30,10 @@
 
             // echo $row['Role'];
 
-            if($row['Role']>=750 || $row['Role']==260){
+            if($row['Permission']=='Admin'){
                 $query="SELECT `assetsinfo`.* FROM `assetsinfo` WHERE `assetsinfo`.`Employer` = '$emp' OR `assetsinfo`.`ChangeEmployer`='$emp'";
             }
-            else if($row['Role']==700){
+            else if($row['Permission']=='Manager'){
                 $query="SELECT * FROM `assetsinfo` WHERE (`assetsinfo`.`Employer` = '$emp' OR `assetsinfo`.`ChangeEmployer` = '$emp')
                 AND (`CurrentID` NOT IN (SELECT `ID` FROM `userinfo` WHERE `Role`>700)) AND (`ChangeID` NOT IN (SELECT `ID` FROM `userinfo` WHERE `Role`>700))
                 AND (`CurrentID` IN (SELECT `UserID` FROM `accessinfo` WHERE `CustomerID` IN (SELECT `CustomerID` FROM `accessinfo` WHERE `UserID`='$id')) OR `ChangeID` IN (SELECT `UserID` FROM `accessinfo` WHERE `CustomerID` IN (SELECT `CustomerID` FROM `accessinfo` WHERE `UserID`='$id')))";
@@ -80,7 +80,7 @@
 
         }
 
-        public function getasset(){
+        public function get_assets(){
 
             // $data = json_decode($data, true);
 
